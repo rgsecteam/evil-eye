@@ -2,10 +2,10 @@
 
 # Detect Kernel & OS
 case "$(uname -s)" in
-    Linux*)     KERNEL=Linux;;
-    Darwin*)    KERNEL=macOS;;
-    CYGWIN*)    KERNEL=Cygwin;;
-    *)          KERNEL="UNKNOWN"
+    Linux*)     KERNEL=Linux ;;
+    Darwin*)    KERNEL=macOS ;;
+    CYGWIN*)    KERNEL=Cygwin ;;
+    *)          KERNEL="UNKNOWN" ;;
 esac
 
 # Detect Hardware Architecture
@@ -20,4 +20,3 @@ if [ "$KERNEL" == "Linux" ]; then
         DISTRO="Unknown Linux"
     fi
 fi
-
