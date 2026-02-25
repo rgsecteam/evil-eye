@@ -84,7 +84,7 @@ git clone https://github.com/rgsecteam/evil-eye.git
 ### 2. Go to **evil-eye** Directory
 
 ```bash
-cd evel-eye
+cd evil-eye
 ```
 
 ### 3. Give execution permission
