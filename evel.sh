@@ -45,7 +45,7 @@ load_lib() {
 
 # Load Tools
 load_tools() {
-    { clear; small_banner | lolcat; banner2; echo; }
+    { clear; small_banner; banner2; echo; }
     print_status "${white}Internet Connection" "$int_status"
     check_requirements "lolcat" "jq" "php" "curl" "wget" "cloudflared"
     sleep 1
