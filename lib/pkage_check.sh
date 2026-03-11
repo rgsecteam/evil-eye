@@ -62,20 +62,27 @@ check_requirements() {
 
             # ── Special Case: lolcat ───────────────────────────────────────
             # lolcat is not always in apt; try gem first
-            elif [[ "$pkg" == "lolcat" ]]; then
+                elif [[ "$pkg" == "lolcat" ]]; then
                 local installed=0
-                if command -v gem >/dev/null 2>&1; then
-                    gem install lolcat > /dev/null 2>&1 && installed=1
-                fi
+                # Try Gem first (common for lolcat)
+                    if command -v gem >/dev/null 2>&1; then
+                    sudo gem install lolcat > /dev/null 2>&1 && installed=1
+                    fi
+                # If Gem failed, use the system-specific manager
                 if [[ $installed -eq 0 ]]; then
-                    sudo apt-get install -y lolcat > /dev/null 2>&1 && installed=1
+                    if [ "$KERNEL" == "Linux" ]; then
+                    sudo apt-get update && sudo apt-get install -y lolcat > /dev/null 2>&1 && installed=1
+                elif [ "$KERNEL" == "macOS" ]; then
+                    brew install lolcat > /dev/null 2>&1 && installed=1
                 fi
-                if [[ $installed -eq 1 ]]; then
-                    echo -e "    ${green}[${white}+${green}]${white} lolcat installed successfully.${nocolor}"
-                else
-                    echo -e "    ${red}Error: lolcat installation failed. Exiting.${nocolor}"
-                    exit 1
-                fi
+            fi
+
+    if [[ $installed -eq 1 ]]; then
+        echo -e "    ${green}[${white}+${green}]${white} lolcat installed successfully.${nocolor}"
+    else
+        echo -e "    ${red}Error: lolcat installation failed. Try: sudo gem install lolcat${nocolor}"
+        exit 1
+    fi
 
             # ── Standard Packages ──────────────────────────────────────────
             else
