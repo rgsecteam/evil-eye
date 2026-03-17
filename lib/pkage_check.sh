@@ -66,12 +66,12 @@ check_requirements() {
                 local installed=0
                 # Try Gem first (common for lolcat)
                     if command -v gem >/dev/null 2>&1; then
-                    sudo gem install lolcat > /dev/null 2>&1 && installed=1
+                    gem install lolcat > /dev/null 2>&1 && installed=1
                     fi
                 # If Gem failed, use the system-specific manager
                 if [[ $installed -eq 0 ]]; then
                     if [ "$KERNEL" == "Linux" ]; then
-                    sudo apt-get update && sudo apt-get install -y lolcat > /dev/null 2>&1 && installed=1
+                    apt update && apt install -y lolcat > /dev/null 2>&1 && installed=1
                 elif [ "$KERNEL" == "macOS" ]; then
                     brew install lolcat > /dev/null 2>&1 && installed=1
                 fi
@@ -88,7 +88,7 @@ check_requirements() {
             else
                 local install_ok=0
                 if [ "$KERNEL" == "Linux" ]; then
-                    sudo apt-get update && sudo apt-get install -y "$pkg" && install_ok=1
+                    apt update && apt install -y "$pkg" && install_ok=1
                 elif [ "$KERNEL" == "macOS" ]; then
                     brew install "$pkg" && install_ok=1
                 elif [ "$KERNEL" == "Cygwin" ]; then
