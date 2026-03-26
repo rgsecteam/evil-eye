@@ -86,13 +86,7 @@ git clone https://github.com/rgsecteam/evil-eye.git
 cd evil-eye
 ```
 
-### 3. Give execution permission
-
-```bash
-chmod +x evel.sh
-```
-
-### 4. Run
+### 3. Run
 
 ```bash
 ./evel.sh
@@ -101,6 +95,16 @@ chmod +x evel.sh
 > `cloudflared` and `lolcat` will be installed automatically if not found.
 
 ---
+## 🚀 Termux Setup 
+### Install ca-certificates
+```bash
+pkg update && pkg install ca-certificates -y
+```
+### update ca-certificates
+```bash
+export SSL_CERT_FILE=$PREFIX/etc/tls/cert.pem
+```
+> **install and setup this `ca-certificates.` If this is not enabled, the `cloudflare` tunnel will not start.**
 
 ## 🎭 Templates
 
