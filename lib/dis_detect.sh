@@ -10,6 +10,7 @@ esac
 
 # Detect Hardware Architecture
 ARCH=$(uname -m)
+OS_NAME=$(uname -o)
 
 # Deep Dive into Linux Distributions
 if [ "$KERNEL" == "Linux" ]; then

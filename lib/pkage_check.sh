@@ -27,29 +27,25 @@ check_requirements() {
     local requirements=("$@")
     local missing=0
 
-    for pkg in "${requirements[@]}"; do
-        # Check if command exists or binary exists in current directory
-        if command -v "$pkg" >/dev/null 2>&1 || [[ -f "./$pkg" ]]; then
-            print_status "${white}$pkg" "${green}Installed${nocolor}"
-            sleep 0.4
+    for package in "${requirements[@]}"; do
+        if command -v "$package" >/dev/null 2>&1 || [[ -f "./$package" ]]; then
+            print_status "${white}$package" "${green}Installed${nocolor}"
+            sleep 0.2
         else
-            print_status "${white}$pkg" "${red}Missing${nocolor}"
-            missing=$((missing + 1))
+            print_status "${white}$package" "${red}Missing${nocolor}"
+            echo -e "    ${red}[${orange}!${red}]${white} $package is required. Installing...${nocolor}"
 
-            echo -e "    ${red}[${orange}!${red}]${white} $pkg is required. Starting automatic installation...${nocolor}"
-
-            # ── Special Case: cloudflared ──────────────────────────────────
-            if [[ "$pkg" == "cloudflared" ]]; then
+            # ── Case 1: cloudflared ──────────────────────────────────
+            if [[ "$package" == "cloudflared" ]]; then
                 local arch url
                 arch=$(uname -m)
                 case $arch in
-                    *arm*|*Android*)  url="cloudflared-linux-arm" ;;
-                    *aarch64*)        url="cloudflared-linux-arm64" ;;
-                    *x86_64*)         url="cloudflared-linux-amd64" ;;
-                    *)                url="cloudflared-linux-386" ;;
+                    arm* | armv*)  url="cloudflared-linux-arm"   ;;
+                    aarch64*)      url="cloudflared-linux-arm64" ;;
+                    x86_64*)       url="cloudflared-linux-amd64" ;;
+                    *)             url="cloudflared-linux-386" ;;
                 esac
 
-                # check wget exit code, not chmod
                 if wget --no-check-certificate \
                         "https://github.com/cloudflare/cloudflared/releases/latest/download/$url" \
                         -O cloudflared > /dev/null 2>&1; then
@@ -57,57 +53,62 @@ check_requirements() {
                     echo -e "    ${green}[${white}+${green}]${white} cloudflared installed successfully.${nocolor}"
                 else
                     echo -e "    ${red}Error: cloudflared download failed. Exiting.${nocolor}"
-                    exit 1
+                    ((missing++))
                 fi
 
-            # ── Special Case: lolcat ───────────────────────────────────────
-            # lolcat is not always in apt; try gem first
-                elif [[ "$pkg" == "lolcat" ]]; then
-                local installed=0
-                # Try Gem first (common for lolcat)
-                    if command -v gem >/dev/null 2>&1; then
-                    gem install lolcat > /dev/null 2>&1 && installed=1
+            # ── Case 2: lolcat ───────────────────────────────────────
+            elif [[ "$package" == "lolcat" ]]; then
+                     
+                if [[ "$OS_NAME" == "Android" ]]; then
+                    echo -e "    ${cyan}[${white}*${cyan}]${white} Skipping lolcat installation (Android detected).${nocolor}"
+                    sleep 0.2
+                else
+                    # Linux / macOS
+                    if [[ "$KERNEL" == "Linux" ]]; then
+                        apt update && apt install -y lolcat > /dev/null 2>&1
+                    elif [[ "$KERNEL" == "Darwin" ]]; then
+                        brew install lolcat > /dev/null 2>&1
                     fi
-                # If Gem failed, use the system-specific manager
-                if [[ $installed -eq 0 ]]; then
-                    if [ "$KERNEL" == "Linux" ]; then
-                    apt update && apt install -y lolcat > /dev/null 2>&1 && installed=1
-                elif [ "$KERNEL" == "macOS" ]; then
-                    brew install lolcat > /dev/null 2>&1 && installed=1
+
+                    # apt/brew gem
+                    if ! command -v lolcat >/dev/null 2>&1; then
+                        echo -e "    ${cyan}[${white}*${cyan}]${white} Trying gem install lolcat as fallback...${nocolor}"
+                        gem install lolcat > /dev/null 2>&1
+                    fi
+
+                    if command -v lolcat >/dev/null 2>&1; then
+                        echo -e "    ${green}[${white}*${green}]${white} lolcat installed successfully.${nocolor}"
+                    else
+                        echo -e "    ${red}[✗] lolcat installation failed.${nocolor}"
+                        ((missing++))
+                    fi
                 fi
-            fi
 
-    if [[ $installed -eq 1 ]]; then
-        echo -e "    ${green}[${white}+${green}]${white} lolcat installed successfully.${nocolor}"
-    else
-        echo -e "    ${red}Error: lolcat installation failed. Try: sudo gem install lolcat${nocolor}"
-        exit 1
-    fi
-
-            # ── Standard Packages ──────────────────────────────────────────
+            # ── Case 3: Standard Packages (jq, php, wget, etc.) ──────
             else
-                local install_ok=0
-                if [ "$KERNEL" == "Linux" ]; then
-                    apt update && apt install -y "$pkg" && install_ok=1
-                elif [ "$KERNEL" == "macOS" ]; then
-                    brew install "$pkg" && install_ok=1
-                elif [ "$KERNEL" == "Cygwin" ]; then
-                    apt-cyg install "$pkg" && install_ok=1
-                else
-                    echo -e "${red}[!] Kernel Not Detected: $KERNEL. Cannot auto-install.${nocolor}"
-                    exit 1
+                if [[ "$OS_NAME" == "Android" ]]; then
+                    pkg update -y && pkg install -y "$package" > /dev/null 2>&1
+                elif [[ "$KERNEL" == "Linux" ]]; then
+                    sudo apt update && sudo apt install -y "$package" > /dev/null 2>&1
+                elif [[ "$KERNEL" == "Darwin" ]]; then
+                    brew install "$package" > /dev/null 2>&1
                 fi
 
-                if [[ $install_ok -eq 1 ]]; then
-                    echo -e "    ${green}[${white}+${green}]${white} $pkg installed successfully.${nocolor}"
+                if command -v "$package" >/dev/null 2>&1; then
+                    echo -e "    ${green}[+] $package installed successfully.${nocolor}"
                 else
-                    echo -e "    ${red}Error: $pkg installation failed. Exiting.${nocolor}"
-                    exit 1
+                    echo -e "    ${red}[✗] $package installation failed.${nocolor}"
+                    ((missing++))
                 fi
             fi
-            sleep 0.4
+
+            sleep 0.2
         fi
     done
 
-    return $missing
+    # package install fail
+    if [[ "$missing" -gt 0 ]]; then
+        echo -e "\n    ${red}[✗] $missing package(s) could not be installed. Exiting.${nocolor}"
+        exit 1
+    fi
 }

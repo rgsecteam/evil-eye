@@ -5,7 +5,6 @@ EYE_PATH="$SCRIPT_DIR/.sites/evil-eye"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Move captured image files from .server/images → captured_imgs/
-# null glob handled with shopt so empty dir won't throw an error
 # ─────────────────────────────────────────────────────────────────────────────
 move_capture_file() {
     if [ -d "$SCRIPT_DIR/.server/images" ]; then
@@ -82,7 +81,7 @@ setup_birthday_wish() {
 # ─────────────────────────────────────────────────────────────────────────────
 # YouTube Live TV
 # ─────────────────────────────────────────────────────────────────────────────
-setup-youtube-tv() {
+setup_youtube_tv() {
     local yt_templates_path="$SCRIPT_DIR/.sites/youtube_live"
     _check_template_dir "$yt_templates_path"
 

@@ -46,7 +46,7 @@
 | 🎭 **5 Lure Templates** | YouTube Live, Birthday Wish, Secret Message, Fake Instagram, AI Chatbot |
 | 📍 **IP & UA Logging** | Logs victim's IP address and browser user-agent on link open |
 | 🔧 **Auto Dependency Install** | Detects and installs missing tools automatically on first run |
-| 🖥️ **Cross-Distro Support** | Kali Linux, Parrot OS, Ubuntu, macOS — auto-detects OS and architecture |
+| 🖥️ **Cross-Distro Support** | Kali Linux, Termux, Parrot OS, Ubuntu, macOS — auto-detects OS and architecture |
 
 ---
 
@@ -57,17 +57,16 @@
 - Parrot OS
 - Ubuntu / Debian
 - macOS (with Homebrew)
-- ~~Termux~~ (Comeing soon...)
+- Termux (Android)
 
 ### Dependencies
 
 | Tool | Purpose | Install |
 |---|---|---|
-| `php` | Built-in web server | `sudo apt install php` |
-| `php-cgi` | Fallback CGI server (Parrot OS) | `sudo apt install php-cgi` |
-| `curl` | Network requests & health checks | `sudo apt install curl` |
-| `wget` | Download cloudflared binary | `sudo apt install wget` |
-| `jq` | JSON processing for templates | `sudo apt install jq` |
+| `php` | Built-in web server | *Auto-installed on first run*  |
+| `curl` | Network requests & health checks | *Auto-installed on first run*  |
+| `wget` | Download cloudflared binary | *Auto-installed on first run*  |
+| `jq` | JSON processing for templates | *Auto-installed on first run*  |
 | `cloudflared` | Public HTTPS tunnel | *Auto-downloaded on first run* |
 | `lolcat` | Colorful terminal banners | *Auto-installed on first run* |
 
@@ -156,7 +155,8 @@ A fake AI assistant chat interface. Camera access is requested in the background
 | OS | Version | Status |
 |---|---|---|
 | Kali Linux | 2024.x | ✅ Working |
-| Parrot OS | 6.x | ✅ Working (with php-cgi) |
+| Termux | 0.118.x | ✅ Working |
+| Parrot OS | 6.x | ✅ Working |
 | Ubuntu | 22.04 / 24.04 | ✅ Working |
 | macOS | Ventura / Sonoma | ✅ Working |
 

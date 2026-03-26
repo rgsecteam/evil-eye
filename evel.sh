@@ -25,7 +25,7 @@ white="$(printf '\033[1;37m')"
 redbg="$(printf '\033[1;41m')"
 nocolor="$(printf '\e[0m')"
 
-# FIX #12: symlink-safe SCRIPT_DIR
+# SCRIPT_DIR
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 trap terminate INT
@@ -53,7 +53,7 @@ load_tools() {
 
 # Main Menu
 main_menu() {
-    { clear; banner | lolcat; banner2; echo; }
+    { clear; show_banner; banner2; echo; }
 cat << EOF
     ${green}<<------ ${white}Select a Templates ${green}------>>${nocolor}
 
@@ -68,7 +68,7 @@ EOF
     read -p "    ${cyan}[${green}+${cyan}]${white} Select an options:${green} " templates
 
     case $templates in
-        1) setup-youtube-tv ;;
+        1) setup_youtube_tv ;;
         2) setup_birthday_wish ;;
         3) secret_msg ;;
         4) fake_insta_follower ;;

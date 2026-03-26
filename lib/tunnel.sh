@@ -1,7 +1,7 @@
 #!/bin/bash
 
 tunnel_menu() {
-    { clear; banner | lolcat; banner2; echo; }
+    { clear; show_banner; banner2; echo; }
 cat << EOF
     ${green}<<------ ${white}Select a Tunnel Option ${green}------>>${nocolor}
 
@@ -23,7 +23,7 @@ EOF
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FIX #1: Detect PHP binary (Parrot OS may use php8.x naming)
+# Detect PHP binary 
 # ─────────────────────────────────────────────────────────────────────────────
 _get_php_bin() {
     for bin in php php8.5 php8.3 php8.2 php8.1 php8.0 php7.4; do
@@ -36,7 +36,7 @@ _get_php_bin() {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Start PHP server on port 9090, verify it actually started
+# Start PHP server on port 9090
 # ─────────────────────────────────────────────────────────────────────────────
 _start_php_server() {
     local PHP_BIN
@@ -54,13 +54,6 @@ _start_php_server() {
     cd "$SCRIPT_DIR/.server" && $PHP_BIN -S 127.0.0.1:9090 > /dev/null 2>&1 &
     sleep 2
 
-    # Verify the server is actually listening
-    #if ! ss -tlnp 2>/dev/null | grep -q ':9090' && \
-    #   ! netstat -tlnp 2>/dev/null | grep -q ':9090'; then
-    #    echo -e "    ${red}[✖] PHP server failed to start on port 9090! Check PHP installation.${nocolor}"
-    #    exit 1
-    #fi
-
     echo -e "    ${cyan}[${orange}+${cyan}]${white} Local server: ${green}http://127.0.0.1:9090${nocolor}"
 }
 
@@ -70,7 +63,7 @@ _start_php_server() {
 # timeout on link-wait loop
 # ─────────────────────────────────────────────────────────────────────────────
 start_cloudf() {
-    { clear; banner | lolcat; banner2; echo; }
+    { clear; show_banner; banner2; echo; }
     echo -e "${green}    <<------ ${white}Starting Cloudflared Tunnel ${green}------>>${nocolor}"
     echo -e ""
 
@@ -99,6 +92,9 @@ start_cloudf() {
         if [[ $count -ge $MAX_WAIT ]]; then
             echo -e "\n    ${red}[✖] Cloudflared link generation timed out after ${MAX_WAIT}s.${nocolor}"
             echo -e "    ${red}[!] Check your cloudflared binary or internet connection.${nocolor}"
+            if [[ "$OS_NAME" == "Android" ]]; then
+            echo -e "\n    ${red}[${orange}!${red}]${white} If you are using ${orange}Android Termux${white}, please turn on your ${green}mobile hotspot ${white}and try again. ${nocolor}"
+            fi
             terminate
         fi
         sleep 1
@@ -112,7 +108,7 @@ start_cloudf() {
 # Localhost only
 # ─────────────────────────────────────────────────────────────────────────────
 start_localhst() {
-    { clear; banner | lolcat; banner2; echo; }
+    { clear; show_banner; banner2; echo; }
     echo -e "${green}    <<------ ${white}Starting Localhost Server ${green}------>>${nocolor}"
     echo -e ""
 

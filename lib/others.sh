@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# kill_pid is now a plain function — NOT called at top level.
-# evel.sh calls kill_pid explicitly after load_lib().
-
 # Kill Background Processes
 kill_pid() {
     local check_PID="php cloudflared"
@@ -46,3 +43,4 @@ back() {
     rm -rf "$SCRIPT_DIR/.server/"* 2>/dev/null
     main_menu
 }
+
